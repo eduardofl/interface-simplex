@@ -5,13 +5,13 @@ import { connect } from 'react-redux';
 import Row from './row';
 import { resolveModelo } from '../actions';
 
-const matriz_vazia = [
+/*const matriz_vazia = [
   ["Variaveis basicas", " ", " ", " ", " ", " ", "Valores de -f e Xb"],
   ["-f", " ", " ", " ", " ", " ", " "],
   [" ", " ", " ", " ", " ", " ", " "],
   [" ", " ", " ", " ", " ", " ", " "],
   [" ", " ", " ", " ", " ", " ", " "]
-];
+];*/
 
 class Tableau extends Component {
   numeroTableaus() {
@@ -23,13 +23,14 @@ class Tableau extends Component {
       return null;
     } else {
       return _.map(this.props.modelos, modelo => {
-        return [
+        var matriz = [
           ["Variaveis basicas", ...modelo.var_decisao, ...modelo.var_folga, "Valores de -f e Xb"],
-          ["-f", ...modelo.coef_func_obj, modelo.valor_func_obj],
-          [modelo.var_basicas[0], ...modelo.coeficientes[0], modelo.coef_xb[0]],
-          [modelo.var_basicas[1], ...modelo.coeficientes[1], modelo.coef_xb[1]],
-          [modelo.var_basicas[2], ...modelo.coeficientes[2], modelo.coef_xb[2]]
+          ["-f", ...modelo.coef_func_obj, modelo.valor_func_obj]
         ];
+        modelo.var_basicas.forEach( (variavel_basica, linha) => {
+          matriz = [...matriz, [variavel_basica, ...modelo.coeficientes[linha], modelo.coef_xb[linha]] ];
+        });
+        return matriz;
       });
     }
   }
@@ -38,7 +39,7 @@ class Tableau extends Component {
     const matrizes_string = this.geraMatrizesString();
     var linha = 0;
 
-    if(!matrizes_string) {
+    /*if(!matrizes_string) {
       return (
         matriz_vazia.map( (row) => {
           linha = linha + 1;
@@ -48,6 +49,16 @@ class Tableau extends Component {
         })
       );
     } else {
+      return (
+        matrizes_string[this.props.tableauAtual].map( (row) => {
+          linha = linha + 1;
+          return (
+            <Row data={row} linha={linha} key={linha}/>
+          );
+        })
+      );
+    }*/
+    if(matrizes_string) {
       return (
         matrizes_string[this.props.tableauAtual].map( (row) => {
           linha = linha + 1;

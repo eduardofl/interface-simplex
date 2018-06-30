@@ -1,4 +1,5 @@
 import { resolveModeloSimplex } from './metodo_simplex';
+import { parseText } from './parser.js';
 export const RECEBE_MODELO = 'recebe_modelo';
 export const RESOLVE_MODELO = 'resolve_modelo';
 export const PROXIMO_TABLEAU = 'proximo_tableau';
@@ -12,7 +13,8 @@ export function recebeModelo(modelo) {
 }
 
 export function resolveModelo(modelo) {
-  const modelos_resolucao = resolveModeloSimplex(modelo);
+  const obj_modelo = parseText(modelo);
+  const modelos_resolucao = resolveModeloSimplex(obj_modelo);
 
   return {
     type: RESOLVE_MODELO,
