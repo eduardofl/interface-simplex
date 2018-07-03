@@ -1,11 +1,15 @@
 import React, { Component } from 'react';
 
 class NavBar extends Component {
+  atualizaPagina() {
+    window.location.reload();
+  }
+
   render() {
     return(
       <header>
         <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
-          <span className="navbar-brand">Início</span>
+          <span className="navbar-brand btn" onClick={this.atualizaPagina.bind(this)}>Início</span>
 
           <div className="nav-item dropdown">
             <button className="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

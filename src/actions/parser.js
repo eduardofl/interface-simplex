@@ -1,5 +1,5 @@
+import { aplicaDualSimplex } from './dual_simplex';
 var math = require('mathjs');
-var necessita_dual = false;
 var tipo;
 /*'Max 3x + 2y + 5z
 s.a.
@@ -13,53 +13,33 @@ s.a.
 0.25x <= 800
 3x + 2y <= 12000*/
 
-function getCoeficiente(expressao, variavel) {
-  const node = math.parse(expressao);
-  const obj_txt = `{ "${variavel}": 1 }`;
-  const scope = JSON.parse(obj_txt);
-  var coeficiente = null, coeficiente_txt = "0";
-
-  node.traverse( (node, path, parent) => {
-    if(node.isOperatorNode && node.op === "*") {
-      if(node.args[0].isSymbolNode && node.args[0].name === variavel) {
-        const novo_valor = math.fraction(node.eval(scope));
-        if(parent && (parent.op === "-" && parent.args[1] === node)) {
-          novo_valor.s *= -1;
-        }
-        coeficiente = novo_valor;
-      } else if(node.args[1].isSymbolNode && node.args[1].name === variavel) {
-        const novo_valor = math.fraction(node.eval(scope));
-        if(parent && (parent.op === "-" && parent.args[1] === node)) {
-          novo_valor.s *= -1;
-        }
-        coeficiente = novo_valor;
-      }
-    } else if (node.isOperatorNode && node.op === "-") {
-      if(node.fn === "unaryMinus") {
-        if(node.args[0].isSymbolNode && node.args[0].name === variavel) {
-          coeficiente = math.fraction(-1);
-        }
-      } else if (node.fn === "subtract") {
-        if(node.args[1].isSymbolNode && node.args[1].name === variavel) {
-          coeficiente = math.fraction(-1);
-        }
-      }
-    } else if(node.isOperatorNode && node.op === "+") {
-      if((node.args[1].isSymbolNode && node.args[1].name === variavel) || (node.args[0].isSymbolNode && node.args[0].name === variavel)) {
-        coeficiente = math.fraction(1);
-      }
-    } /*else if(node.isSymbolNode && node.name === variavel) {
-      if(parent && (parent.isOperatorNode && parent.op === "-")) {
-        coeficiente = math.fraction(-1);
-      } else
-        coeficiente = math.fraction(1);
-    }*/
-  });
-
-  if(coeficiente !== null){
-    var sinal = (coeficiente.s === -1) ? "-" : "";
-    coeficiente_txt = (coeficiente.d === 1) ? `${sinal}${coeficiente.n}` : `${sinal}${coeficiente.n}/${coeficiente.d}`;
+function getCoeficiente(expressao, variavel, todas_variaveis) {
+  const node_aux = math.parse(expressao);
+  var node_expr;
+  if(node_aux.isOperatorNode && (node_aux.op === "<=" || node_aux.op === ">=" || node_aux.op === "=")) {
+    node_expr = node_aux.args[0];
+  } else {
+    node_expr = node_aux;
   }
+
+  var obj_txt = "{ ";
+  todas_variaveis.forEach( (aux, posicao) => {
+    if(aux !== variavel) {
+      obj_txt += `"${aux}": 0`;
+      (posicao === (todas_variaveis.length-1)) ? obj_txt += " " :  obj_txt += ", ";
+    } else {
+      obj_txt += `"${aux}": 1`;
+      (posicao === (todas_variaveis.length-1)) ? obj_txt += " " :  obj_txt += ", ";
+    }
+  });
+  obj_txt += "}";
+
+  const scope = JSON.parse(obj_txt);
+
+  var coeficiente = math.fraction(node_expr.eval(scope));
+
+  var sinal = (coeficiente.s === -1) ? "-" : "";
+  const coeficiente_txt = (coeficiente.d === 1) ? `${sinal}${coeficiente.n}` : `${sinal}${coeficiente.n}/${coeficiente.d}`;
 
   return coeficiente_txt;
 }
@@ -104,9 +84,19 @@ export function parseText(texto_modelo) {
 
   var linhas = texto_modelo.split('\n');
   var restricoes = [], node;
+  var coefs_var_folga = [], num_folgas = 0;
+  var necessita_dual = false, linhas_dual = [];
+  var modelos_resolucao = [];
+
 
   linhas.forEach( (conteudo, linha) => {
     if(linha === 0) {
+      /*var aux = conteudo.split(" ");
+      if(aux[0] === 'Max' || aux[0] === 'max' || aux[0] === 'Min' || aux[0] === 'min') {
+        tipo = aux[0];
+      }*/
+      //else modelo invalido
+      
       node = math.parse(conteudo);
       parseEquation(node, linha);
       linhas[0] = linhas[0].replace(`${tipo}`, '');
@@ -124,9 +114,15 @@ export function parseText(texto_modelo) {
       node = math.parse(conteudo);
       if(node.isOperatorNode && node.op === "<=") {
         obj_modelo.coef_xb = [...obj_modelo.coef_xb, node.args[1].value.toString()];
+        coefs_var_folga = [...coefs_var_folga, 1];
       } else if (node.isOperatorNode && node.op === ">=") {
         obj_modelo.coef_xb = [...obj_modelo.coef_xb, node.args[1].value.toString()];
+        coefs_var_folga = [...coefs_var_folga, -1];
         necessita_dual = true;
+        linhas_dual = [...linhas_dual, linha -2];
+      } else if(node.isOperatorNode && node.op === "=") {
+        obj_modelo.coef_xb = [...obj_modelo.coef_xb, node.args[1].value.toString()];
+        coefs_var_folga = [...coefs_var_folga, 0];
       }
     }
   });
@@ -139,13 +135,16 @@ export function parseText(texto_modelo) {
   });
 
   obj_modelo.var_decisao.forEach( (variavel) => {
-    var aux = getCoeficiente(linhas[0], variavel);
+    var aux = getCoeficiente(linhas[0], variavel, obj_modelo.var_decisao);
     obj_modelo.coef_func_obj = [...obj_modelo.coef_func_obj, aux];
   });
 
-  for(var i = 1; i <= restricoes.length; i++) {
-    var var_folga = `s${i}`;
-    obj_modelo.var_folga = [...obj_modelo.var_folga, var_folga];
+  for(var i = 0; i < restricoes.length; i++) {
+    if(coefs_var_folga[i] !== 0) {
+      var var_folga = `s${1 + num_folgas}`;
+      obj_modelo.var_folga = [...obj_modelo.var_folga, var_folga];
+      num_folgas++;
+    }
   }
   obj_modelo.var_basicas = [...obj_modelo.var_folga];
 
@@ -159,9 +158,10 @@ export function parseText(texto_modelo) {
     todas_variaveis.forEach( (variavel, coluna) => {
       var aux = "0";
       if(obj_modelo.var_decisao.includes(variavel)) {
-        linha_coeficientes = [...linha_coeficientes, getCoeficiente(restricoes[linha], variavel)];
+        linha_coeficientes = [...linha_coeficientes, getCoeficiente(restricoes[linha], variavel, obj_modelo.var_decisao)];
       } else if(obj_modelo.var_basicas[linha] === todas_variaveis[coluna]) {
-        aux = "1";
+        var sinal = (coefs_var_folga[linha] === -1) ? "-" : "";
+        aux = `${sinal}1`;
         linha_coeficientes = [...linha_coeficientes, aux];
       } else {
         linha_coeficientes = [...linha_coeficientes, aux];
@@ -180,6 +180,25 @@ export function parseText(texto_modelo) {
       obj_modelo.coef_func_obj[coluna] = (novo_valor.d === 1) ? `${sinal}${novo_valor.n}` : `${sinal}${novo_valor.n}/${novo_valor.d}`;
     });
   }
-  console.log(obj_modelo);
-  return obj_modelo;
+
+  if(necessita_dual === true) {
+    linhas_dual.forEach( (linha) => {
+      obj_modelo.coeficientes[linha].forEach( (conteudo, coluna) => {
+        var valor = math.fraction(conteudo);
+        var novo_valor = math.chain(valor).multiply(math.fraction(-1)).done();
+        var sinal = (novo_valor.s === -1) ? "-" : "";
+        obj_modelo.coeficientes[linha][coluna] = (novo_valor.d === 1) ? `${sinal}${novo_valor.n}` : `${sinal}${novo_valor.n}/${novo_valor.d}`;
+      });
+      var coef_xb = obj_modelo.coef_xb[linha];
+      var valor = math.fraction(coef_xb);
+      var novo_coef = math.chain(valor).multiply(math.fraction(-1)).done();
+      var sinal = (novo_coef.s === -1) ? "-" : "";
+      obj_modelo.coef_xb[linha] = (novo_coef.d === 1) ? `${sinal}${novo_coef.n}` : `${sinal}${novo_coef.n}/${novo_coef.d}`;
+    });
+    modelos_resolucao = aplicaDualSimplex(obj_modelo);
+  } else {
+    modelos_resolucao = [ obj_modelo ];
+  }
+
+  return modelos_resolucao;
 }

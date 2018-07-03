@@ -4,6 +4,7 @@ export const RECEBE_MODELO = 'recebe_modelo';
 export const RESOLVE_MODELO = 'resolve_modelo';
 export const PROXIMO_TABLEAU = 'proximo_tableau';
 export const TABLEAU_ANTERIOR = 'tableau_anterior';
+export const TABLEAU_INICIAL = 'tableau_inicial';
 
 export function recebeModelo(modelo) {
   return {
@@ -13,8 +14,12 @@ export function recebeModelo(modelo) {
 }
 
 export function resolveModelo(modelo) {
-  const obj_modelo = parseText(modelo);
-  const modelos_resolucao = resolveModeloSimplex(obj_modelo);
+  //const obj_modelo = parseText(modelo);
+  //const modelos_resolucao = resolveModeloSimplex(obj_modelo);
+  var array_modelos = parseText(modelo);
+  //var modelos_resolucao = _.mapKeys(array_modelos, 'iteracoes'); //usar funçao lodash mapKeys para mapear como objeto
+  //const modelo_atual = array_modelos[array_modelos.length - 1];
+  var modelos_resolucao = { ...resolveModeloSimplex(array_modelos)};
 
   return {
     type: RESOLVE_MODELO,
@@ -49,5 +54,12 @@ export function tableauAnterior(tableauAtual) {
   return {
     type: TABLEAU_ANTERIOR,
     payload: anterior
+  };
+}
+
+export function tableauInicial() {
+  return {
+    type: TABLEAU_INICIAL,
+    payload: 0
   };
 }
