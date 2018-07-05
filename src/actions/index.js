@@ -1,10 +1,11 @@
 import { resolveModeloSimplex } from './metodo_simplex';
 import { parseText } from './parser.js';
+import { geraArquivoTexto } from './exportacao_tableaus';
 export const RECEBE_MODELO = 'recebe_modelo';
 export const RESOLVE_MODELO = 'resolve_modelo';
 export const PROXIMO_TABLEAU = 'proximo_tableau';
 export const TABLEAU_ANTERIOR = 'tableau_anterior';
-export const TABLEAU_INICIAL = 'tableau_inicial';
+export const EXPORTA_TABLEAUS = 'exporta_tableaus';
 
 export function recebeModelo(modelo) {
   return {
@@ -57,9 +58,11 @@ export function tableauAnterior(tableauAtual) {
   };
 }
 
-export function tableauInicial() {
+export function exportaTableaus(modelos) {
+  const conteudo_texto = geraArquivoTexto(modelos);
+
   return {
-    type: TABLEAU_INICIAL,
-    payload: 0
+    type: EXPORTA_TABLEAUS,
+    payload: conteudo_texto
   };
 }

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { resolveModelo, tableauInicial } from '../actions';
+import { resolveModelo } from '../actions';
 
 class Modelo extends Component {
   constructor(props) {
@@ -25,7 +25,6 @@ class Modelo extends Component {
     if(this.state.texto_modelo === "") {
       this.setState({texto_alerta: "Modelo inválido. Verifique a sintaxe e tente novamente."});
     } else {
-      this.props.tableauInicial();
       this.props.resolveModelo(this.state.texto_modelo);
     }
   }
@@ -91,4 +90,4 @@ class Modelo extends Component {
   }
 }
 
-export default connect( null, { resolveModelo, tableauInicial })(Modelo);
+export default connect( null, { resolveModelo })(Modelo);
