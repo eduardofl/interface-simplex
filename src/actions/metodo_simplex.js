@@ -142,8 +142,8 @@ export function iteracao(modelo, linha_pivo, coluna_pivo) {
 
 export function resolveModeloSimplex(modelos) {
   var array_modelos = [ ...modelos ];
-  var solucaoOtima = false;
   var iteracoes = modelos[modelos.length - 1].iteracoes;
+  var solucaoOtima = verificaOtimalidade(array_modelos[iteracoes]);
 
   while(!solucaoOtima) {
     const modelo_aux = array_modelos[iteracoes];
