@@ -25,20 +25,18 @@ class Modelo extends Component {
   }
 
   radioChange(e) {
-    //console.log(e.target.value);
-    //console.log(this.props.formato);
     switch(e.target.value) {
       case 'fracao':
         if(this.props.formato.tipo === DECIMAL) {
           this.props.trocaFormato(e.target.value);
-          this.props.geraMatrizString(this.props.modelos, e.target.value);
+          this.props.geraMatrizString(this.props.modelos, e.target.value, this.props.tableauAtual);
         }
         break;
 
       case 'decimal':
         if(this.props.formato.tipo === FRACAO) {
           this.props.trocaFormato(e.target.value);
-          this.props.geraMatrizString(this.props.modelos, e.target.value);
+          this.props.geraMatrizString(this.props.modelos, e.target.value, this.props.tableauAtual);
         }
         break;
 
@@ -54,38 +52,7 @@ class Modelo extends Component {
     }
   }
 
-  /*onDragOver(e) {
-    e.preventDefault();
-    e.target.className = 'form-control hover';
-  }
-
-  onDragEnd(e) {
-    e.target.className = 'form-control';
-  }
-
-  onDrop(e) {
-      e.target.className = 'form-control';
-      e.preventDefault();
-
-      var file = e.dataTransfer.files[0], reader = new FileReader();
-      reader.onload = (event) => {
-          //console.log(event.target);
-          //const texto = (event.target.result).toString();
-          //const texto = (' ' + event.target.result).slice(1);
-          this.setState({texto_modelo: event.target.result});
-      };
-
-      reader.readAsText(file);
-  }*/
-
   render() {
-    /*var texto_modelo = "";
-    if(this.props.textoArquivo !== "") {
-      texto_modelo = this.props.textoArquivo;
-    } else {
-      texto_modelo = this.state.texto_modelo;
-    }*/
-    //console.log(this.props.formato);
     return (
       <div className="container-fluid modelo-container">
         <div className="row">
@@ -152,6 +119,7 @@ class Modelo extends Component {
 function mapStateToProps(state) {
   return {
     modelos: state.modelos,
+    tableauAtual: state.navegacao,
     formato: state.formato
   };
 }

@@ -1,17 +1,6 @@
 import { aplicaDualSimplex } from './dual_simplex';
 var math = require('mathjs');
 var tipo;
-/*'Max 3x + 2y + 5z
-s.a.
-x + 2y + z <= 430
-3x + 2z <= 460
-x + 4y <= 420'*/
-
-/*Max 0.2x + 0.1y
-s.a.
-0.1y <= 200
-0.25x <= 800
-3x + 2y <= 12000*/
 
 function getCoeficiente(expressao, variavel, todas_variaveis) {
   const node_aux = math.parse(expressao);
@@ -91,24 +80,10 @@ export function parseText(texto_modelo) {
 
   linhas.forEach( (conteudo, linha) => {
     if(linha === 0) {
-      /*var aux = conteudo.split(" ");
-      if(aux[0] === 'Max' || aux[0] === 'max' || aux[0] === 'Min' || aux[0] === 'min') {
-        tipo = aux[0];
-      }*/
-      //else modelo invalido
-      
       node = math.parse(conteudo);
       parseEquation(node, linha);
       linhas[0] = linhas[0].replace(`${tipo}`, '');
-      /*node.forEach( (node, path, parent) => {
-        if(node.isSymbolNode) {
-          if(node.name === 'Max' || node.name === 'max' || node.name === 'Min' || node.name === 'min') {
-            tipo = node.name;
-          } else if(!(obj_modelo.var_decisao.includes(node.name))) {
-            obj_modelo.var_decisao = [...obj_modelo.var_decisao, node.name];
-          }
-        }
-      });*/
+
     } else if((conteudo !== 'st') && (conteudo !== 'sa')) {
       restricoes = [...restricoes, conteudo];
       node = math.parse(conteudo);
@@ -166,7 +141,7 @@ export function parseText(texto_modelo) {
       } else {
         linha_coeficientes = [...linha_coeficientes, aux];
       }
-      //obj_modelo.coeficientes[linha] = [...obj_modelo.coeficientes[linha], aux];
+      
     });
     return linha_coeficientes;
   });

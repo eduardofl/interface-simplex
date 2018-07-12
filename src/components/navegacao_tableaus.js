@@ -4,15 +4,17 @@ import Ionicon from 'react-ionicons';
 import { connect } from 'react-redux';
 
 import Tableau from './tableau';
-import { proximoTableau, tableauAnterior } from '../actions';
+import { proximoTableau, tableauAnterior, geraMatrizString } from '../actions';
 
 class NavegacaoTableaus extends Component {
   tableauAnterior(tableau_atual) {
     this.props.tableauAnterior(tableau_atual);
+    this.props.geraMatrizString(this.props.modelos, this.props.tipo, tableau_atual);
   }
 
   proximoTableau(tableau_atual, num_tableaus) {
     this.props.proximoTableau(tableau_atual, num_tableaus);
+    this.props.geraMatrizString(this.props.modelos, this.props.tipo, tableau_atual);
   }
 
   render() {
@@ -59,8 +61,9 @@ class NavegacaoTableaus extends Component {
 function mapStateToProps(state) {
   return {
     modelos: state.modelos,
-    navegacao: state.navegacao
+    navegacao: state.navegacao,
+    tipo: state.formato.tipo
   };
 }
 
-export default connect(mapStateToProps, { proximoTableau, tableauAnterior })(NavegacaoTableaus);
+export default connect(mapStateToProps, { proximoTableau, tableauAnterior, geraMatrizString })(NavegacaoTableaus);

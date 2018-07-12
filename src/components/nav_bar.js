@@ -10,20 +10,7 @@ class NavBar extends Component {
     window.location.reload();
   }
 
-  /*handleChange(event) {
-    //texto
-    //console.log(event.target.files[0]);
-    //var texto = "";
-    var file = event.target.files[0], reader = new FileReader();
-    reader.onload = (e) => {
-        this.props.onFileSelect(e.target.result);
-    };
-
-    reader.readAsText(file);
-  }*/
-
   importaArquivo() {
-    //var file = this.fileInput.files[0], reader = new FileReader();
     var file = document.getElementById("entrada_arquivo").files[0], reader = new FileReader();
     reader.onload = (e) => {
         this.props.onFileSelect(e.target.result);

@@ -20,11 +20,7 @@ export function recebeModelo(modelo) {
 }
 
 export function resolveModelo(modelo) {
-  //const obj_modelo = parseText(modelo);
-  //const modelos_resolucao = resolveModeloSimplex(obj_modelo);
   var array_modelos = parseText(modelo);
-  //var modelos_resolucao = _.mapKeys(array_modelos, 'iteracoes'); //usar funçao lodash mapKeys para mapear como objeto
-  //const modelo_atual = array_modelos[array_modelos.length - 1];
   var modelos_resolucao = { ...resolveModeloSimplex(array_modelos)};
 
   return {
@@ -79,86 +75,73 @@ export function trocaFormato(novo_formato) {
   };
 }
 
-export function geraMatrizString(modelos, tipo) {
-  var matrizes_string = null;
+export function geraMatrizString(modelos, tipo, tableau_atual) {
+  var matriz_string = null, matriz;
   var math = require('mathjs');
 
-  if(!(_.isEmpty(modelos))){
-    if(tipo === FRACAO) {
-      matrizes_string = _.map(modelos, modelo => {
-        var matriz = [
-          ["Variaveis basicas", ...modelo.var_decisao, ...modelo.var_folga, "Valores de -f e Xb"],
-          ["-f", ...modelo.coef_func_obj, modelo.valor_func_obj]
-        ];
-        modelo.var_basicas.forEach( (variavel_basica, linha) => {
-          matriz = [...matriz, [variavel_basica, ...modelo.coeficientes[linha], modelo.coef_xb[linha]] ];
-        });
-        return matriz;
-      });
-    } else if(tipo === DECIMAL){
-      matrizes_string = _.map(modelos, modelo => {
-        //linha 1
-        var matriz = [
-          ["Variaveis basicas", ...modelo.var_decisao, ...modelo.var_folga, "Valores de -f e Xb"]
-        ];
-
-        //linha 2
-        var linha2 = ["-f"];
-        modelo.coef_func_obj.forEach( (coef) => {
-          var num_decimal = math.number(math.fraction(coef));
-          num_decimal = math.round(num_decimal * 10000) / 10000;
-
-          var aux = `${num_decimal}`;
-          linha2 = [...linha2, aux];
-        });
-        var f_decimal = math.number(math.fraction(modelo.valor_func_obj));
-        f_decimal = math.round(f_decimal * 10000) / 10000;
-        linha2 = [...linha2, `${f_decimal}`];
-
-        matriz = [...matriz, linha2];
-
-        //linhas restantes
-        modelo.var_basicas.forEach( (variavel_basica, linha) => {
-          var nova_linha = [variavel_basica];
-
-          modelo.coeficientes[linha].forEach( (coef) => {
-            var num_decimal = math.number(math.fraction(coef));
-            num_decimal = math.round(num_decimal * 10000) / 10000;
-
-            nova_linha = [...nova_linha, `${num_decimal}`];
-          });
-          var xb_decimal = math.number(math.fraction(modelo.coef_xb[linha]));
-          xb_decimal = math.round(xb_decimal * 10000) / 10000;
-
-          nova_linha = [...nova_linha, `${xb_decimal}`];
-
-
-          matriz = [...matriz, nova_linha ];
-          //matriz = [...matriz, [variavel_basica, ...modelo.coeficientes[linha], modelo.coef_xb[linha]] ];
-        });
-
-        return matriz;
-      });
+  var modelo = {};
+  Object.keys(modelos).forEach( (iteracoes) => {
+    if(modelos[iteracoes].iteracoes === tableau_atual) {
+      modelo = modelos[iteracoes];
     }
-  }
+  });
 
-  /*if(_.isEmpty(modelos)) {
-    matrizes_string = null;
-  } else {
-    matrizes_string = _.map(modelos, modelo => {
-      var matriz = [
+  if(!(_.isEmpty(modelo))){
+    if(tipo === FRACAO) {
+      matriz = [
         ["Variaveis basicas", ...modelo.var_decisao, ...modelo.var_folga, "Valores de -f e Xb"],
         ["-f", ...modelo.coef_func_obj, modelo.valor_func_obj]
       ];
       modelo.var_basicas.forEach( (variavel_basica, linha) => {
         matriz = [...matriz, [variavel_basica, ...modelo.coeficientes[linha], modelo.coef_xb[linha]] ];
       });
-      return matriz;
-    });
-  }*/
+      matriz_string = matriz;
+    } else if(tipo === DECIMAL){
+      //linha 1
+      matriz = [
+        ["Variaveis basicas", ...modelo.var_decisao, ...modelo.var_folga, "Valores de -f e Xb"]
+      ];
+
+      //linha 2
+      var linha2 = ["-f"];
+      modelo.coef_func_obj.forEach( (coef) => {
+        var num_decimal = math.number(math.fraction(coef));
+        num_decimal = math.round(num_decimal * 10000) / 10000;
+
+        var aux = `${num_decimal}`;
+        linha2 = [...linha2, aux];
+      });
+      var f_decimal = math.number(math.fraction(modelo.valor_func_obj));
+      f_decimal = math.round(f_decimal * 10000) / 10000;
+      linha2 = [...linha2, `${f_decimal}`];
+
+      matriz = [...matriz, linha2];
+
+      //linhas restantes
+      modelo.var_basicas.forEach( (variavel_basica, linha) => {
+        var nova_linha = [variavel_basica];
+
+        modelo.coeficientes[linha].forEach( (coef) => {
+          var num_decimal = math.number(math.fraction(coef));
+          num_decimal = math.round(num_decimal * 10000) / 10000;
+
+          nova_linha = [...nova_linha, `${num_decimal}`];
+        });
+        var xb_decimal = math.number(math.fraction(modelo.coef_xb[linha]));
+        xb_decimal = math.round(xb_decimal * 10000) / 10000;
+
+        nova_linha = [...nova_linha, `${xb_decimal}`];
+
+
+        matriz = [...matriz, nova_linha ];
+      });
+
+      matriz_string = matriz;
+    }
+  }
 
   return {
     type: GERA_MATRIZ,
-    payload: matrizes_string
+    payload: matriz_string
   };
 }

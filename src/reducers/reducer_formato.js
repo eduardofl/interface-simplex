@@ -14,7 +14,7 @@ export default function(state = initialState, action) {
 
     case GERA_MATRIZ:
     return Object.assign({}, state, {
-      tabelas: action.payload
+      tabela: action.payload
     });
 
     default:
