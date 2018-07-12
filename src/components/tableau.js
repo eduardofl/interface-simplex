@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
-import _ from 'lodash';
+//import _ from 'lodash';
 import { connect } from 'react-redux';
 
 import Row from './row';
-import { resolveModelo } from '../actions';
+import { resolveModelo, geraMatrizString } from '../actions';
 
 /*const matriz_vazia = [
   ["Variaveis basicas", " ", " ", " ", " ", " ", "Valores de -f e Xb"],
@@ -18,7 +18,11 @@ class Tableau extends Component {
     return Object.keys(this.props.modelos).length;
   }
 
-  geraMatrizesString(){
+  componentDidMount() {
+    this.props.geraMatrizString(this.props.modelos, this.props.formato.tipo); //passar tipo também
+  }
+
+  /*geraMatrizesString(){
     if(_.isEmpty(this.props.modelos)) {
       return null;
     } else {
@@ -33,10 +37,12 @@ class Tableau extends Component {
         return matriz;
       });
     }
-  }
+  }*/
 
   renderTableau() {
-    const matrizes_string = this.geraMatrizesString();
+    if(!this.props.formato.tabelas) this.props.geraMatrizString(this.props.modelos, this.props.formato.tipo);
+    const matrizes_string = this.props.formato.tabelas;
+    //console.log(this.props.formato);
     var linha = 0;
 
     /*if(!matrizes_string) {
@@ -85,8 +91,9 @@ class Tableau extends Component {
 
 function mapStateToProps(state) {
   return {
-    modelos: state.modelos
+    modelos: state.modelos,
+    formato: state.formato
   };
 }
 
- export default connect(mapStateToProps, { resolveModelo })(Tableau);
+ export default connect(mapStateToProps, { resolveModelo, geraMatrizString })(Tableau);

@@ -1,6 +1,10 @@
 import _ from 'lodash';
+import { FRACAO } from '../actions';
+var math = require('mathjs');
 
-function geraTextoTableau(modelo){
+
+function geraTextoTableau(modelo, tipo){
+  var aux, texto_coeficiente;
   //linha 1
   var texto = "Variáveis| ";
   var largura = 1;
@@ -28,16 +32,36 @@ function geraTextoTableau(modelo){
 
   //linha 3
   texto += "   -f    | ";
-  modelo.coef_func_obj.forEach( (variavel, indice) => {
+  modelo.coef_func_obj.forEach( (coef, indice) => {
     if(indice !== modelo.coef_func_obj.length - 1) {
-      texto += variavel;
-      for(i=0;i< 7 - variavel.length;i++) texto += " ";
+      aux = math.number(math.fraction(coef));
+      aux = math.round(aux * 10000) / 10000;
+      const coef_dec = `${aux}`;
+
+      texto_coeficiente = (tipo === FRACAO) ? coef : coef_dec;
+      texto += texto_coeficiente;
+
+      for(i=0;i< 7 - texto_coeficiente.length;i++) texto += " ";
     } else {
-      texto += variavel;
-      for(i=0;i< 6 - variavel.length;i++) texto += " ";
+      aux = math.number(math.fraction(coef));
+      aux = math.round(aux * 10000) / 10000;
+      const coef_dec = `${aux}`;
+
+      texto_coeficiente = (tipo === FRACAO) ? coef : coef_dec;
+      texto += texto_coeficiente;
+      for(i=0;i< 6 - texto_coeficiente.length;i++) texto += " ";
     }
   });
-  texto += "|    " + modelo.valor_func_obj + "\n";
+  if(tipo === FRACAO) {
+    texto += "|    " + modelo.valor_func_obj + "\n";
+  } else {
+    aux = math.number(math.fraction(modelo.valor_func_obj));
+    aux = math.round(aux * 10000) / 10000;
+
+    const f_dec = `${aux}`;
+    texto += "|    " + f_dec + "\n";
+  }
+
 
   //linhas de restrição
   modelo.var_basicas.forEach( (variavel, linha) => {
@@ -47,23 +71,43 @@ function geraTextoTableau(modelo){
 
     modelo.coeficientes[linha].forEach( (valor, coluna) => {
       if(coluna !== modelo.coeficientes[linha].length - 1) {
-        texto += valor;
-        for(i=0;i< 7 - valor.length;i++) texto += " ";
+        aux = math.number(math.fraction(valor));
+        aux = math.round(aux * 10000) / 10000;
+        const valor_dec = `${aux}`;
+
+        texto_coeficiente = (tipo === FRACAO) ? valor : valor_dec;
+        texto += texto_coeficiente;
+
+        for(i=0;i< 7 - texto_coeficiente.length;i++) texto += " ";
       } else {
-        texto += valor;
-        for(i=0;i< 6 - valor.length;i++) texto += " ";
+        aux = math.number(math.fraction(valor));
+        aux = math.round(aux * 10000) / 10000;
+        const valor_dec = `${aux}`;
+
+        texto_coeficiente = (tipo === FRACAO) ? valor : valor_dec;
+        texto += texto_coeficiente;
+
+        for(i=0;i< 6 - texto_coeficiente.length;i++) texto += " ";
       }
     });
-    texto += "|    " + modelo.coef_xb[linha] + "\n";
+    if(tipo === FRACAO) {
+      texto += "|    " + modelo.coef_xb[linha] + "\n";
+    } else {
+      aux = math.number(math.fraction(modelo.coef_xb[linha]));
+      aux = math.round(aux * 10000) / 10000;
+
+      const xb_dec = `${aux}`;
+      texto += "|    " + xb_dec + "\n";
+    }
   });
 
   return texto;
 }
 
-export function geraArquivoTexto(modelos) {
+export function geraArquivoTexto(modelos, tipo) {
   var texto_conteudo = "";
   const array_tableaus = _.map(modelos, (modelo) => {
-    return geraTextoTableau(modelo);
+    return geraTextoTableau(modelo, tipo);
   });
 
   array_tableaus.forEach( (tableau, iteracoes) => {

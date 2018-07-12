@@ -10,11 +10,33 @@ class NavBar extends Component {
     window.location.reload();
   }
 
+  /*handleChange(event) {
+    //texto
+    //console.log(event.target.files[0]);
+    //var texto = "";
+    var file = event.target.files[0], reader = new FileReader();
+    reader.onload = (e) => {
+        this.props.onFileSelect(e.target.result);
+    };
+
+    reader.readAsText(file);
+  }*/
+
+  importaArquivo() {
+    //var file = this.fileInput.files[0], reader = new FileReader();
+    var file = document.getElementById("entrada_arquivo").files[0], reader = new FileReader();
+    reader.onload = (e) => {
+        this.props.onFileSelect(e.target.result);
+    };
+
+    reader.readAsText(file);
+  }
+
   exportaSolucao() {
     if(_.isEmpty(this.props.modelos)) {
       document.getElementById("myCheck").click();
     } else {
-      const arquivo_txt = this.props.exportaTableaus(this.props.modelos);
+      const arquivo_txt = this.props.exportaTableaus(this.props.modelos, this.props.tipo);
 
       var blob = new Blob([arquivo_txt.payload], {type: "text/plain;charset=utf-8"});
       FileSaver.saveAs(blob, "solucao.txt");
@@ -50,10 +72,16 @@ class NavBar extends Component {
                 </button>
               </div>
               <div className="modal-body">
-                Para importar, arraste um arquivo de texto que contenha o modelo com a sintaxe indicada abaixo para a caixa de texto do modelo.
+                <p>Para importar, selecione um arquivo de texto que contenha o modelo com a sintaxe como indicada:</p>
+                <input
+                  type="file"
+                  id="entrada_arquivo"
+                  accept="text/plain"
+                />
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-primary" data-dismiss="modal">OK</button>
+                <button type="button" className="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" className="btn btn-primary" data-dismiss="modal" onClick={ () => {this.importaArquivo()} }>Importar</button>
               </div>
             </div>
           </div>
@@ -106,7 +134,8 @@ class NavBar extends Component {
 
 function mapStateToProps(state) {
   return {
-    modelos: state.modelos
+    modelos: state.modelos,
+    tipo: state.formato.tipo
   };
 }
 

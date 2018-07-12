@@ -7,6 +7,13 @@ import Tableau from './tableau';
 import { proximoTableau, tableauAnterior } from '../actions';
 
 class NavegacaoTableaus extends Component {
+  tableauAnterior(tableau_atual) {
+    this.props.tableauAnterior(tableau_atual);
+  }
+
+  proximoTableau(tableau_atual, num_tableaus) {
+    this.props.proximoTableau(tableau_atual, num_tableaus);
+  }
 
   render() {
     const tableau_atual = this.props.navegacao;
@@ -31,7 +38,7 @@ class NavegacaoTableaus extends Component {
         <div className="container-fluid">
           <div className="row justify-content-md-center align-items-center">
             <div className="col-sm-1">
-              <Ionicon icon="md-arrow-round-back" fontSize="45px" onClick={ () => { this.props.tableauAnterior(tableau_atual); } } color="#007bff"/>
+              <Ionicon icon="md-arrow-round-back" fontSize="45px" onClick={() => {this.tableauAnterior(tableau_atual)}} color="#007bff"/>
             </div>
             <div className="col">
               <div className="row justify-content-md-left align-items-left">
@@ -40,7 +47,7 @@ class NavegacaoTableaus extends Component {
               <div className="row"><Tableau tableauAtual={tableau_atual} /></div>
             </div>
             <div className="col-sm-1">
-              <Ionicon icon="md-arrow-round-forward" fontSize="45px" onClick={ () => { this.props.proximoTableau(tableau_atual, num_tableaus); } } color="#007bff"/>
+              <Ionicon icon="md-arrow-round-forward" fontSize="45px" onClick={() => {this.proximoTableau(tableau_atual, num_tableaus)}} color="#007bff"/>
             </div>
           </div>
         </div>

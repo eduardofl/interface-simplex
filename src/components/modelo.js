@@ -1,10 +1,13 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { resolveModelo } from '../actions';
+import { FRACAO, DECIMAL } from '../actions';
+import { resolveModelo, trocaFormato, geraMatrizString } from '../actions';
 
 class Modelo extends Component {
   constructor(props) {
     super(props);
+
+    this.radioChange = this.radioChange.bind(this);
     this.state = {texto_modelo: '', texto_alerta: ''};
   }
 
@@ -21,6 +24,28 @@ class Modelo extends Component {
     this.setState({texto_modelo: ""});
   }
 
+  radioChange(e) {
+    //console.log(e.target.value);
+    //console.log(this.props.formato);
+    switch(e.target.value) {
+      case 'fracao':
+        if(this.props.formato.tipo === DECIMAL) {
+          this.props.trocaFormato(e.target.value);
+          this.props.geraMatrizString(this.props.modelos, e.target.value);
+        }
+        break;
+
+      case 'decimal':
+        if(this.props.formato.tipo === FRACAO) {
+          this.props.trocaFormato(e.target.value);
+          this.props.geraMatrizString(this.props.modelos, e.target.value);
+        }
+        break;
+
+      default: break;
+    }
+  }
+
   resolveModelo() {
     if(this.state.texto_modelo === "") {
       this.setState({texto_alerta: "Modelo inválido. Verifique a sintaxe e tente novamente."});
@@ -29,7 +54,7 @@ class Modelo extends Component {
     }
   }
 
-  onDragOver(e) {
+  /*onDragOver(e) {
     e.preventDefault();
     e.target.className = 'form-control hover';
   }
@@ -51,15 +76,21 @@ class Modelo extends Component {
       };
 
       reader.readAsText(file);
-  }
+  }*/
 
   render() {
-
+    /*var texto_modelo = "";
+    if(this.props.textoArquivo !== "") {
+      texto_modelo = this.props.textoArquivo;
+    } else {
+      texto_modelo = this.state.texto_modelo;
+    }*/
+    //console.log(this.props.formato);
     return (
       <div className="container-fluid modelo-container">
         <div className="row">
-          <div className="col-sm-3"></div>
-          <div className="col-sm-8">
+          <div className="col-sm-2"></div>
+          <div className="col-sm-9">
             <label>Modelo:</label>
           </div>
         </div>
@@ -70,19 +101,47 @@ class Modelo extends Component {
               id="modeloTextArea"
               rows="5"
               value={this.state.texto_modelo}
-              onChange={this.handleChange.bind(this)}
-              onDragOver={this.onDragOver.bind(this)}
-              onDragEnd={this.onDragEnd.bind(this)}
-              onDrop={this.onDrop.bind(this)}>
+              onChange={this.handleChange.bind(this)}>
             </textarea>
             <span className="text-danger">{this.state.texto_alerta}</span>
           </div>
-          <div className="col-sm-2 text-xs-left">
+          <div className="col-sm-1 text-xs-left">
             <div className="btn-group-vertical">
               <button className="btn btn-primary" onClick={ () => {this.resolveModelo()} }>Resolver</button>
               <button className="btn btn-primary" onClick={ () => {this.exemploModelo()} }>Exemplo</button>
               <button className="btn btn-primary" onClick={ () => {this.limparModelo()} }>Limpar</button>
             </div>
+          </div>
+          <div className="col-sm-3 text-xs-left">
+            <table className="table table-sm">
+              <thead>
+                <tr><td className="table-secondary">Exibir os números no formato:</td></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div className="form-check">
+                      <input className="form-check-input" type="radio" name="radioFormato" id="radioFracao"
+                        value="fracao" checked={this.props.formato.tipo === FRACAO} onChange={this.radioChange}/>
+                      <label className="form-check-label">
+                        Fração
+                      </label>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div className="form-check">
+                      <input className="form-check-input" type="radio" name="radioFormato" id="radioDecimal"
+                        value="decimal" checked={this.props.formato.tipo === DECIMAL} onChange={this.radioChange}/>
+                      <label className="form-check-label">
+                        Decimal
+                      </label>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -90,4 +149,11 @@ class Modelo extends Component {
   }
 }
 
-export default connect( null, { resolveModelo })(Modelo);
+function mapStateToProps(state) {
+  return {
+    modelos: state.modelos,
+    formato: state.formato
+  };
+}
+
+export default connect(mapStateToProps, { resolveModelo, trocaFormato, geraMatrizString })(Modelo);
