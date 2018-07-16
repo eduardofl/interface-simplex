@@ -1,7 +1,9 @@
 import { iteracao } from './metodo_simplex';
 var math = require('mathjs');
 
-function verificaOtimalidade(modelo) {
+// verifica se a solução atual é viável,
+// caso alguma variável básica seja negativa retorna falso
+function verificaViabilidade(modelo) {
   const coeficientes_xb = modelo.coef_xb.map( (conteudo) => {
     return math.fraction(conteudo);
   });
@@ -18,7 +20,8 @@ function verificaOtimalidade(modelo) {
   }
 }
 
-function variavelSaindo(modelo) {
+// determina qual variável deve sair da base (aquela com o coeficiente mais negativo)
+export function variavelSaindo(modelo) {
   const coeficientes_xb = modelo.coef_xb.map( (conteudo) => {
     return math.fraction(conteudo);
   });
@@ -31,10 +34,12 @@ function variavelSaindo(modelo) {
       indice_menor = posicao;
     }
   });
+
   return indice_menor;
 }
 
-function variavelEntrando(modelo, linha) {
+// determina qual variável deve entrar na base
+export function variavelEntrando(modelo, linha) {
   const todas_variaveis = [ ...modelo.var_decisao, ...modelo.var_folga ];
   const coeficientes_func_obj = modelo.coef_func_obj.map( (conteudo) => { return math.fraction(conteudo); } );
   const coeficientes_linhas = modelo.coeficientes[linha].map( (conteudo) => { return math.fraction(conteudo); } );
@@ -62,10 +67,11 @@ function variavelEntrando(modelo, linha) {
   return indice_menor;
 }
 
+// realiza iterações e testa a cada passo, parando ao obter uma solução que seja viável
 export function aplicaDualSimplex(modelo) {
   var array_modelos = [ modelo ];
   var iteracoes = 0;
-  var solucaoOtima = verificaOtimalidade(array_modelos[iteracoes]);
+  var solucaoOtima = verificaViabilidade(array_modelos[iteracoes]);
 
   while(!solucaoOtima) {
     const modelo_aux = array_modelos[iteracoes];
@@ -83,7 +89,7 @@ export function aplicaDualSimplex(modelo) {
     //iteracoes++
     iteracoes++;
 
-    solucaoOtima = verificaOtimalidade(array_modelos[iteracoes]);
+    solucaoOtima = verificaViabilidade(array_modelos[iteracoes]);
   }
 
 

@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import { resolveModeloSimplex } from './metodo_simplex';
+import { variavelEntrando, variavelSaindo, resolveModeloSimplex } from './metodo_simplex';
+import { variavelEntrando as variavelEntrandoDual, variavelSaindo as variavelSaindoDual} from './dual_simplex';
 import { parseText } from './parser.js';
 import { geraArquivoTexto } from './exportacao_tableaus';
 export const RECEBE_MODELO = 'recebe_modelo';
@@ -9,6 +10,8 @@ export const TABLEAU_ANTERIOR = 'tableau_anterior';
 export const EXPORTA_TABLEAUS = 'exporta_tableaus';
 export const TROCA_FORMATO = 'troca_formato';
 export const GERA_MATRIZ = 'gera_matriz';
+export const ATUALIZA_PIVO = 'atualiza_pivo';
+export const IMPORTA_ARQUIVO = 'importa_arquivo';
 export const FRACAO = 'fracao';
 export const DECIMAL = 'decimal';
 
@@ -21,7 +24,7 @@ export function recebeModelo(modelo) {
 
 export function resolveModelo(modelo) {
   var array_modelos = parseText(modelo);
-  var modelos_resolucao = { ...resolveModeloSimplex(array_modelos)};
+  var modelos_resolucao = resolveModeloSimplex(array_modelos);
 
   return {
     type: RESOLVE_MODELO,
@@ -59,6 +62,13 @@ export function tableauAnterior(tableauAtual) {
   };
 }
 
+export function importaArquivo(texto_arquivo) {
+  return {
+    type: IMPORTA_ARQUIVO,
+    payload: texto_arquivo
+  };
+}
+
 export function exportaTableaus(modelos, tipo) {
   const conteudo_texto = geraArquivoTexto(modelos, tipo);
 
@@ -75,11 +85,15 @@ export function trocaFormato(novo_formato) {
   };
 }
 
+// gera uma matriz contendo apenas strings para representar uma tabela da solução.
+// essa matriz é repassada aos componentes React que irão realizar a exibição
+// dos dados para o usuário
 export function geraMatrizString(modelos, tipo, tableau_atual) {
   var matriz_string = null, matriz;
   var math = require('mathjs');
 
   var modelo = {};
+  //if(modelos[tableau_atual]) modelos = modelos[tableau_atual];
   Object.keys(modelos).forEach( (iteracoes) => {
     if(modelos[iteracoes].iteracoes === tableau_atual) {
       modelo = modelos[iteracoes];
@@ -143,5 +157,38 @@ export function geraMatrizString(modelos, tipo, tableau_atual) {
   return {
     type: GERA_MATRIZ,
     payload: matriz_string
+  };
+}
+
+// verifica qual é o pivô da tabela sendo exibida no momento
+// de modo que se possa indicar visualmente para o usuário qual
+// variável entra e qual sai
+export function atualizaPivo(modelos, num_tableaus, tableau_atual) {
+  var coluna, linha;
+  const tableaus_dual = modelos.tableaus_dual;
+
+  // caso o tableau atual seja o último retorna um pivô com os atributos
+  // nulos, pois não haverá troca de variáveis na base
+  if(tableau_atual === (num_tableaus - 1)) {
+    coluna = null;
+    linha = null;
+  } else {
+    if(tableaus_dual !== null && tableau_atual < tableaus_dual - 1) {
+      linha = variavelSaindoDual(modelos.modelos[tableau_atual]);
+      coluna = variavelEntrandoDual(modelos.modelos[tableau_atual], linha);
+    } else {
+      coluna = variavelEntrando(modelos.modelos[tableau_atual]);
+      linha = variavelSaindo(modelos.modelos[tableau_atual], coluna);
+    }
+  }
+
+  const pivo = {
+    coluna: coluna,
+    linha: linha
+  };
+
+  return {
+    type: ATUALIZA_PIVO,
+    payload: pivo
   };
 }

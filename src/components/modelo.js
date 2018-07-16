@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { FRACAO, DECIMAL } from '../actions';
-import { resolveModelo, trocaFormato, geraMatrizString } from '../actions';
+import { resolveModelo, importaArquivo, trocaFormato, geraMatrizString } from '../actions';
 
 class Modelo extends Component {
   constructor(props) {
@@ -11,17 +11,32 @@ class Modelo extends Component {
     this.state = {texto_modelo: '', texto_alerta: ''};
   }
 
+  componentDidMount() {
+    if(this.props.formato.texto_arquivo) {
+      this.importaTexto(this.props.formato.texto_arquivo);
+    }
+  }
+
+  alteraTexto(novo_texto) {
+    this.setState({texto_modelo: novo_texto, texto_alerta: ""});
+  }
+
   handleChange(e) {
-    this.setState({texto_modelo: e.target.value, texto_alerta: ""});
+    this.alteraTexto(e.target.value);
+  }
+
+  importaTexto(texto_arquivo) {
+    this.setState({texto_modelo: texto_arquivo, texto_alerta: ""});
+    this.props.importaArquivo("");
   }
 
   exemploModelo() {
     const modelo_exemplo = "Max 3x + 2y + 5z\nst\nx + 2y + z <= 430\n3x + 2z <= 460\nx + 4y <= 420";
-    this.setState({texto_modelo: modelo_exemplo, texto_alerta: ""});
+    this.alteraTexto(modelo_exemplo);
   }
 
   limparModelo() {
-    this.setState({texto_modelo: ""});
+    this.alteraTexto("");
   }
 
   radioChange(e) {
@@ -44,11 +59,12 @@ class Modelo extends Component {
     }
   }
 
-  resolveModelo() {
-    if(this.state.texto_modelo === "") {
+  resolveModelo(texto_modelo) {
+    if(texto_modelo === "" || !texto_modelo) {
       this.setState({texto_alerta: "Modelo inválido. Verifique a sintaxe e tente novamente."});
     } else {
-      this.props.resolveModelo(this.state.texto_modelo);
+
+      this.props.resolveModelo(texto_modelo);
     }
   }
 
@@ -74,7 +90,7 @@ class Modelo extends Component {
           </div>
           <div className="col-sm-1 text-xs-left">
             <div className="btn-group-vertical">
-              <button className="btn btn-primary" onClick={ () => {this.resolveModelo()} }>Resolver</button>
+              <button className="btn btn-primary" onClick={ () => {this.resolveModelo(this.state.texto_modelo)} }>Resolver</button>
               <button className="btn btn-primary" onClick={ () => {this.exemploModelo()} }>Exemplo</button>
               <button className="btn btn-primary" onClick={ () => {this.limparModelo()} }>Limpar</button>
             </div>
@@ -118,10 +134,10 @@ class Modelo extends Component {
 
 function mapStateToProps(state) {
   return {
-    modelos: state.modelos,
+    modelos: state.modelos.modelos,
     tableauAtual: state.navegacao,
     formato: state.formato
   };
 }
 
-export default connect(mapStateToProps, { resolveModelo, trocaFormato, geraMatrizString })(Modelo);
+export default connect(mapStateToProps, { resolveModelo, importaArquivo, trocaFormato, geraMatrizString })(Modelo);

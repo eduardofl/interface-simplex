@@ -1,27 +1,17 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import { importaArquivo } from '../actions';
 
 import NavBar from './nav_bar';
 import Modelo from './modelo';
 import NavegacaoTableaus from './navegacao_tableaus';
 
 class App extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {texto_arquivo: ''};
-  }
-
-  handleArquivo(texto){
-    this.setState({texto_arquivo: texto});
-  }
-
   render() {
-    //var texto = this.state.texto_arquivo;
-    //console.log(this.state.texto_arquivo);
-    if(this.state.texto_arquivo === '') {
+    if(!this.props.texto_arquivo) {
       return (
         <div className="App">
-          <NavBar onFileSelect={this.handleArquivo.bind(this)}/>
+          <NavBar />
           <Modelo />
           <NavegacaoTableaus />
         </div>
@@ -29,8 +19,8 @@ class App extends Component {
     } else {
       return (
         <div className="App">
-          <NavBar onFileSelect={this.handleArquivo.bind(this)}/>
-          <Modelo texto={this.state.texto_arquivo} />
+          <NavBar />
+          <Modelo texto={this.props.texto_arquivo} />
           <NavegacaoTableaus />
         </div>
       );
@@ -38,4 +28,10 @@ class App extends Component {
   }
 }
 
-export default App;
+function mapStateToProps(state) {
+  return {
+    texto_arquivo: state.formato.texto_arquivo
+  };
+}
+
+export default connect(mapStateToProps, { importaArquivo })(App);

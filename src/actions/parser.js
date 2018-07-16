@@ -2,6 +2,7 @@ import { aplicaDualSimplex } from './dual_simplex';
 var math = require('mathjs');
 var tipo;
 
+// busca o coeficiente de uma variável especifica em uma expressao
 function getCoeficiente(expressao, variavel, todas_variaveis) {
   const node_aux = math.parse(expressao);
   var node_expr;
@@ -33,6 +34,8 @@ function getCoeficiente(expressao, variavel, todas_variaveis) {
   return coeficiente_txt;
 }
 
+// varre uma arvóre de expressao recursivamente até encontrar o tipo da operação (maximizazr ou minimizar)
+// é utilizada apenas na função objetivo
 function parseEquation(node, linha) {
   switch (node.type) {
     case 'OperatorNode':
@@ -58,7 +61,10 @@ function parseEquation(node, linha) {
   }
 }
 
+// constrói um objeto que representa o modelo de programção linear inserido
+// pelo usuário, já com variáveis de folga e seus coeficientes
 export function parseText(texto_modelo) {
+  // objeto inicial, com campos vazios
   var obj_modelo = {
     iteracoes: 0,
     var_decisao: [],
@@ -71,13 +77,19 @@ export function parseText(texto_modelo) {
     coef_xb: []
   };
 
+  //divide o modelo inserido por linhas
   var linhas = texto_modelo.split('\n');
+
   var restricoes = [], node;
   var coefs_var_folga = [], num_folgas = 0;
   var necessita_dual = false, linhas_dual = [];
   var modelos_resolucao = [];
 
-
+  // percorre as linhas obtidas de modo a obter as informações:
+  // -o tipo da operação
+  // -os coeficientes das variáveis básicas
+  // -quais linhas precisam de uma variável de folga
+  // -se o modelo atual necessita ou não da aplicação do Dual Simplex
   linhas.forEach( (conteudo, linha) => {
     if(linha === 0) {
       node = math.parse(conteudo);
@@ -102,6 +114,7 @@ export function parseText(texto_modelo) {
     }
   });
 
+  //lê as variáveis de decisão do modelo e adiciona ao objeto
   var func_obj = math.parse(linhas[0]);
   func_obj.traverse( (node, path, parent) => {
     if(node.isSymbolNode && !(obj_modelo.var_decisao.includes(node.name))) {
@@ -109,11 +122,13 @@ export function parseText(texto_modelo) {
     }
   });
 
+  // obtém os coeficientes das variáveis da função objetivo
   obj_modelo.var_decisao.forEach( (variavel) => {
     var aux = getCoeficiente(linhas[0], variavel, obj_modelo.var_decisao);
     obj_modelo.coef_func_obj = [...obj_modelo.coef_func_obj, aux];
   });
 
+  // cria variáveis de folga necessárias
   for(var i = 0; i < restricoes.length; i++) {
     if(coefs_var_folga[i] !== 0) {
       var var_folga = `s${1 + num_folgas}`;
@@ -121,12 +136,16 @@ export function parseText(texto_modelo) {
       num_folgas++;
     }
   }
-  obj_modelo.var_basicas = [...obj_modelo.var_folga];
 
+  // define variáveis de folga como variáveis iniciais e define
+  // seus coeficientes na função objetivo como nulos
+  obj_modelo.var_basicas = [...obj_modelo.var_folga];
   obj_modelo.var_folga.forEach( (variavel, indice) => {
     obj_modelo.coef_func_obj = [...obj_modelo.coef_func_obj, "0"];
   });
 
+  // extrai os demais coeficientes (de todas as variáveis) a
+  // partir das restrições
   const todas_variaveis = [...obj_modelo.var_decisao, ...obj_modelo.var_folga];
   obj_modelo.coeficientes = obj_modelo.var_folga.map( (var_folga, linha) => {
     var linha_coeficientes= [];
@@ -141,7 +160,7 @@ export function parseText(texto_modelo) {
       } else {
         linha_coeficientes = [...linha_coeficientes, aux];
       }
-      
+
     });
     return linha_coeficientes;
   });
@@ -156,6 +175,8 @@ export function parseText(texto_modelo) {
     });
   }
 
+  // caso o dual simplex seja necessário, primeiramente inverte-se a
+  // linha que o faz necessário da seguinte forma: expr >= num = -expr <= -num
   if(necessita_dual === true) {
     linhas_dual.forEach( (linha) => {
       obj_modelo.coeficientes[linha].forEach( (conteudo, coluna) => {

@@ -2,7 +2,7 @@ import _ from 'lodash';
 import { FRACAO } from '../actions';
 var math = require('mathjs');
 
-
+// gera texto para representar apenas um tableau
 function geraTextoTableau(modelo, tipo){
   var aux, texto_coeficiente;
   //linha 1
@@ -104,6 +104,7 @@ function geraTextoTableau(modelo, tipo){
   return texto;
 }
 
+// cria o conteudo do arquivo .txt a ser exportado, com todos os tableaus
 export function geraArquivoTexto(modelos, tipo) {
   var texto_conteudo = "";
   const array_tableaus = _.map(modelos, (modelo) => {

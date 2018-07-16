@@ -21,24 +21,25 @@ function verificaOtimalidade(modelo) {
   }
 }
 
-function variavelEntrando(modelo) {
-  const coeficientes_funcao = modelo.coef_func_obj;
-  var maior_coef = math.fraction(coeficientes_funcao[0]);
-  var indice_maior = 0;
+export function variavelEntrando(modelo) {
+  const coeficientes_funcao_obj = modelo.coef_func_obj.map( (conteudo) => {
+    return math.fraction(conteudo);
+  });
+  var maior_coef = math.min(...coeficientes_funcao_obj);
+  var indice_maior = -1;
 
-  coeficientes_funcao.forEach( (conteudo, posicao) => {
-    var coef = math.fraction(conteudo);
+  coeficientes_funcao_obj.forEach( (coef, posicao) => {
     if(math.larger(coef, 0) && math.larger(coef, maior_coef)) {
       maior_coef = coef;
       indice_maior = posicao;
     }
   });
 
-  //-----ainda retorna o primeiro elemento quando a solução é otima-----//
+  if(indice_maior === -1) return null;
   return indice_maior;
 }
 
-function variavelSaindo(modelo, coluna) {
+export function variavelSaindo(modelo, coluna) {
   const coeficientes_xb = [ ...modelo.coef_xb ];
   const coefs = modelo.coeficientes;
 
@@ -60,9 +61,6 @@ function variavelSaindo(modelo, coluna) {
       indice_menor = posicao;
     }
   });
-
-  //console.log("menor_valor: ", menor_valor);
-  //console.log("posicao: ", indice_menor);
 
   if(indice_menor === -1) return null;
   return indice_menor;
@@ -140,7 +138,13 @@ export function iteracao(modelo, linha_pivo, coluna_pivo) {
   return novo_modelo;
 }
 
+// resolve o modelo de PL recebido, caso tenha aplicado o método dual antes
+// a resolução é feita do último tableau obtido anteriormente.
+//
+// verifica a otimalidade do modelo, caso não, realiza uma iteração
+// e verifica novamente. o processo se repete até encontrar a solução ótima
 export function resolveModeloSimplex(modelos) {
+  const num_tableaus_dual = (modelos.length === 1) ? null : modelos.length;
   var array_modelos = [ ...modelos ];
   var iteracoes = modelos[modelos.length - 1].iteracoes;
   var solucaoOtima = verificaOtimalidade(array_modelos[iteracoes]);
@@ -160,8 +164,6 @@ export function resolveModeloSimplex(modelos) {
     iteracoes += 1;
 
     solucaoOtima = verificaOtimalidade(array_modelos[iteracoes]);
-
-
   }
 
   var modelos_resolucao = {};
@@ -169,5 +171,8 @@ export function resolveModeloSimplex(modelos) {
     modelos_resolucao = { ...modelos_resolucao, [modelo.iteracoes]: modelo };
   });
 
-  return { ...modelos_resolucao };
+  return {
+    tableaus_dual: num_tableaus_dual,
+    modelos: modelos_resolucao
+  };
 }

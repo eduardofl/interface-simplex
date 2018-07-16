@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import _ from 'lodash';
 import { connect } from 'react-redux';
-import { exportaTableaus } from '../actions';
+import { exportaTableaus, importaArquivo } from '../actions';
 
 var FileSaver = require('file-saver');
 
@@ -12,8 +12,9 @@ class NavBar extends Component {
 
   importaArquivo() {
     var file = document.getElementById("entrada_arquivo").files[0], reader = new FileReader();
+
     reader.onload = (e) => {
-        this.props.onFileSelect(e.target.result);
+        this.props.importaArquivo(e.target.result);
     };
 
     reader.readAsText(file);
@@ -121,9 +122,9 @@ class NavBar extends Component {
 
 function mapStateToProps(state) {
   return {
-    modelos: state.modelos,
+    modelos: state.modelos.modelos,
     tipo: state.formato.tipo
   };
 }
 
-export default connect(mapStateToProps, { exportaTableaus })(NavBar);
+export default connect(mapStateToProps, { exportaTableaus, importaArquivo })(NavBar);
